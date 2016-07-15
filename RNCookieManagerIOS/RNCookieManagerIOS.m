@@ -1,6 +1,8 @@
 #import "RNCookieManagerIOS.h"
 #import "RCTConvert.h"
 
+#define kCookieArchive @"RNCookieManagerIOS"
+
 @implementation RNCookieManagerIOS
 
 RCT_EXPORT_MODULE()
@@ -48,6 +50,7 @@ RCT_EXPORT_METHOD(get:(NSURL *)url callback:(RCTResponseSenderBlock)callback) {
 }
 
 RCT_EXPORT_METHOD(clearAll:(RCTResponseSenderBlock)callback) {
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:kCookieArchive];
     NSHTTPCookieStorage *cookieStorage = [NSHTTPCookieStorage sharedHTTPCookieStorage];
     for (NSHTTPCookie *c in cookieStorage.cookies) {
         [cookieStorage deleteCookie:c];
@@ -68,6 +71,23 @@ RCT_EXPORT_METHOD(getAll:(RCTResponseSenderBlock)callback) {
         [cookies setObject:d forKey:c.name];
     }
     callback(@[[NSNull null], cookies]);
+}
+
+RCT_EXPORT_METHOD(save:(RCTResponseSenderBlock)callback) {
+    NSData *archivedCookies = [NSKeyedArchiver archivedDataWithRootObject:[[NSHTTPCookieStorage sharedHTTPCookieStorage] cookies]];
+    [[NSUserDefaults standardUserDefaults] setObject:archivedCookies forKey:kCookieArchive];
+    callback(@[[NSNull null]]);
+}
+
+RCT_EXPORT_METHOD(load:(RCTResponseSenderBlock)callback) {
+    NSData *archivedCookies = [[NSUserDefaults standardUserDefaults] objectForKey:kCookieArchive];
+    if (archivedCookies) {
+        NSArray *cookies = [NSKeyedUnarchiver unarchiveObjectWithData:archivedCookies];
+        for (NSHTTPCookie *cookie in cookies) {
+            [[NSHTTPCookieStorage sharedHTTPCookieStorage] setCookie:cookie];
+        }
+    }
+    callback(@[[NSNull null]]);
 }
 
 @end

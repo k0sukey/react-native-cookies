@@ -22,7 +22,9 @@ var functions = [
     'setFromResponse',
     'get',
     'getAll',
-    'clearAll'
+    'clearAll',
+    'save',
+    'load'
 ];
 
 module.exports = {}
